@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Oskar Marketing – Affiliate Marketing Mentor. Lerne, wie du mit System online verdienst.">
+  <title>Oskar Marketing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050505;
+      --gold: #C9A84C;
+      --gold-l: #E8C96A;
+      --gold-d: #8B6914;
+      --card: rgba(11,11,11,0.85);
+      --text: #F0EAD6;
+      --muted: rgba(240,234,214,0.5);
+      --border: rgba(201,168,76,0.18);
+      --max: 640px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      overflow-x: hidden;
+    }
+
+    /* ── Shader canvas (desktop WebGL background) ── */
+    #shader-bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      display: block;
+    }
+
+    /* ── CSS fallback mesh (shown on mobile / no-WebGL) ── */
+    .bg-mesh {
+      position: fixed;
+      inset: -50%;
+      width: 200%; height: 200%;
+      background:
+        radial-gradient(ellipse 55% 45% at 20% 25%, rgba(201,168,76,0.10) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 55% at 80% 75%, rgba(139,105,20,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 65% 35% at 55% 5%,  rgba(201,168,76,0.06) 0%, transparent 55%),
+        #050505;
+      animation: mesh-drift 20s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes mesh-drift {
+      0%   { transform: translate(0,0)    scale(1);    }
+      33%  { transform: translate(-3%,4%) scale(1.04); }
+      66%  { transform: translate(4%,-3%) scale(0.97); }
+      100% { transform: translate(-2%,2%) scale(1.02); }
+    }
+
+    /* ── Grain ── */
+    .bg-grain {
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.45;
+    }
+
+    /* ── Particles ── */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .p {
+      position: absolute;
+      bottom: -10px;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: 0;
+      animation: float-up linear infinite;
+    }
+    .p:nth-child(1) { left:8%;  animation-duration:13s; animation-delay:0s;   }
+    .p:nth-child(2) { left:22%; width:3px;height:3px; animation-duration:17s; animation-delay:3s;   }
+    .p:nth-child(3) { left:41%; animation-duration:15s; animation-delay:7s;   }
+    .p:nth-child(4) { left:59%; width:3px;height:3px; animation-duration:19s; animation-delay:1s;   }
+    .p:nth-child(5) { left:74%; animation-duration:12s; animation-delay:9s;   }
+    .p:nth-child(6) { left:88%; width:3px;height:3px; animation-duration:16s; animation-delay:5s;   }
+    .p:nth-child(7) { left:33%; animation-duration:14s; animation-delay:11s;  }
+    .p:nth-child(8) { left:67%; animation-duration:18s; animation-delay:2s;   }
+
+    @keyframes float-up {
+      0%   { transform: translateY(0) scale(1);    opacity: 0; }
+      8%   { opacity: 0.55; }
+      92%  { opacity: 0.25; }
+      100% { transform: translateY(-100vh) scale(0.4); opacity: 0; }
+    }
+
+    /* ── Layout ── */
+    .page { position: relative; z-index: 10; }
+
+    .container {
+      width: 100%;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ════════════════════════════════
+       HERO
+    ════════════════════════════════ */
+    .hero {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px 80px;
+      position: relative;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 120px; height: 120px;
+      margin-bottom: 28px;
+      animation: fade-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.1s both;
+    }
+
+    .ring-a, .ring-b, .ring-c {
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    /* Clean border-arc rings — no aliasing, sharp subpixel edges */
+    .ring-a {
+      inset: -9px;
+      border: 3.5px solid transparent;
+      border-top-color: var(--gold-l);
+      border-right-color: rgba(232,201,106,0.45);
+      filter: drop-shadow(0 0 7px rgba(201,168,76,0.7));
+      animation: spin-cw 5s linear infinite;
+      transition: filter 0.4s;
+    }
+
+    .ring-b {
+      inset: -15px;
+      border: 2px solid transparent;
+      border-bottom-color: rgba(139,105,20,0.8);
+      border-left-color: rgba(201,168,76,0.35);
+      filter: drop-shadow(0 0 4px rgba(139,105,20,0.55));
+      animation: spin-ccw 9s linear infinite;
+      transition: filter 0.4s;
+    }
+
+    /* Third ring — reveals on hover */
+    .ring-c {
+      inset: -21px;
+      border: 1px solid transparent;
+      border-top-color: rgba(201,168,76,0.25);
+      border-right-color: rgba(201,168,76,0.1);
+      animation: spin-cw 14s linear infinite;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .avatar-wrap:hover .ring-c { opacity: 1; }
+    .avatar-wrap:hover .ring-a { filter: drop-shadow(0 0 14px rgba(201,168,76,0.95)); }
+    .avatar-wrap:hover .ring-b { filter: drop-shadow(0 0 8px rgba(201,168,76,0.55)); }
+
+    @keyframes spin-cw  { to { transform: rotate(360deg);  } }
+    @keyframes spin-ccw { to { transform: rotate(-360deg); } }
+
+    .avatar-img {
+      position: relative;
+      z-index: 2;
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(36px, 8vw, 56px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.05;
+      background: linear-gradient(110deg,
+        var(--gold-d) 0%, var(--gold-l) 30%,
+        #fff7e6 50%, var(--gold-l) 70%, var(--gold-d) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer-name 4s linear infinite, fade-up 0.8s 0.2s both;
+      margin-bottom: 8px;
+    }
+
+    @keyframes shimmer-name {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    .handle {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      animation: fade-up 0.8s 0.3s both;
+    }
+
+    .ornament {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto 28px;
+      animation: fade-up 0.8s 0.35s both;
+    }
+    .ornament-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-d), transparent);
+    }
+    .ornament-diamond {
+      width: 6px; height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    .bio {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(18px, 4vw, 22px);
+      font-style: italic;
+      color: rgba(240,234,214,0.7);
+      line-height: 1.65;
+      max-width: 480px;
+      margin: 0 auto 40px;
+      animation: fade-up 0.8s 0.45s both;
+    }
+    .bio strong {
+      color: var(--gold-l);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .scroll-hint {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      animation: fade-up 0.8s 0.8s both;
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .scroll-hint-arrow {
+      width: 20px; height: 20px;
+      border-right: 1.5px solid var(--gold-d);
+      border-bottom: 1.5px solid var(--gold-d);
+      transform: rotate(45deg);
+      animation: bounce-down 1.8s ease-in-out infinite;
+    }
+    @keyframes bounce-down {
+      0%, 100% { transform: rotate(45deg) translateY(0);   opacity: 0.5; }
+      50%       { transform: rotate(45deg) translateY(5px); opacity: 1;   }
+    }
+
+    /* ════════════════════════════════
+       SECTION — CTA
+    ════════════════════════════════ */
+    .section-cta {
+      padding: 80px 24px;
+      text-align: center;
+      border-top: 1px solid rgba(201,168,76,0.08);
+      background: linear-gradient(180deg, rgba(201,168,76,0.03) 0%, transparent 100%);
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 6vw, 44px);
+      font-weight: 600;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 400px;
+      margin: 0 auto 40px;
+    }
+
+    .cta {
+      display: inline-block;
+      padding: 18px 48px;
+      border-radius: 12px;
+      text-align: center;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--gold-d) 0%, var(--gold) 50%, var(--gold-l) 100%);
+      color: #0a0800;
+      font-weight: 500;
+      font-size: 16px;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 32px rgba(201,168,76,0.28), 0 0 0 1px rgba(201,168,76,0.15);
+      transition: box-shadow 0.3s, transform 0.2s;
+    }
+
+    .cta::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, var(--gold-l), var(--gold-d));
+      z-index: -1;
+      animation: pulse-ring 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 0.35; transform: scale(1);    }
+      50%       { opacity: 0.75; transform: scale(1.025); }
+    }
+
+    .cta::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 55%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+      animation: shimmer-cta 3.2s ease-in-out infinite;
+    }
+
+    @keyframes shimmer-cta {
+      0%        { left: -100%; }
+      60%, 100% { left: 160%;  }
+    }
+
+    .cta:hover { transform: translateY(-3px); box-shadow: 0 10px 48px rgba(201,168,76,0.4); }
+    .cta:active { transform: translateY(0); }
+
+    .cta-title {
+      display: block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+
+    .cta-sub-text {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+
+    /* ════════════════════════════════
+       SECTION — STATS
+    ════════════════════════════════ */
+    .section-stats {
+      padding: 80px 24px;
+      border-top: 1px solid rgba(201,168,76,0.08);
+      text-align: center;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      max-width: var(--max);
+      margin: 40px auto 0;
+    }
+
+    .stat-card {
+      padding: 32px 20px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(201,168,76,0.10);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .stat-card:first-child { border-radius: 12px 0 0 12px; }
+    .stat-card:last-child  { border-radius: 0 12px 12px 0; }
+
+    .stat-card:hover {
+      background: rgba(201,168,76,0.05);
+      border-color: rgba(201,168,76,0.22);
+    }
+
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 5.5vw, 44px);
+      font-weight: 700;
+      color: var(--gold-l);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ════════════════════════════════
+       SECTION — FEATURES
+    ════════════════════════════════ */
+    .section-features {
+      padding: 80px 24px;
+      border-top: 1px solid rgba(201,168,76,0.08);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      max-width: var(--max);
+      margin: 40px auto 0;
+    }
+
+    @media (min-width: 480px) {
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .feature-card:first-child { grid-column: 1 / -1; }
+    }
+
+    .feature-card {
+      padding: 28px 24px;
+      background: rgba(11,11,11,0.7);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: border-color 0.25s, transform 0.25s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(201,168,76,0.3);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gold-l);
+      margin-bottom: 8px;
+    }
+
+    .feature-text {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ════════════════════════════════
+       SECTION — SOCIAL
+    ════════════════════════════════ */
+    .section-social {
+      padding: 80px 24px;
+      border-top: 1px solid rgba(201,168,76,0.08);
+      text-align: center;
+    }
+
+    .socials {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: var(--max);
+      margin: 40px auto 0;
+    }
+
+    .soc {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 24px;
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: border-color 0.25s, background 0.25s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .soc::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.07), transparent);
+      transition: left 0.5s ease;
+      pointer-events: none;
+    }
+
+    .soc:hover {
+      border-color: rgba(201,168,76,0.28);
+      background: rgba(201,168,76,0.04);
+      transform: translateX(4px);
+    }
+
+    .soc:hover::after { left: 160%; }
+
+    .soc-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .soc-icon svg { width: 22px; height: 22px; }
+
+    .soc-info { flex: 1; }
+
+    .soc-name {
+      font-size: 15px;
+      font-weight: 500;
+      display: block;
+    }
+
+    .soc-desc {
+      font-size: 12px;
+      color: var(--muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .soc-arrow {
+      color: var(--muted);
+      font-size: 20px;
+      flex-shrink: 0;
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .soc:hover .soc-arrow { color: var(--gold); transform: translateX(3px); }
+
+    /* ════════════════════════════════
+       SECTION — FINAL CTA
+    ════════════════════════════════ */
+    .section-final {
+      padding: 100px 24px;
+      border-top: 1px solid rgba(201,168,76,0.08);
+      text-align: center;
+      background: linear-gradient(180deg, transparent 0%, rgba(201,168,76,0.04) 100%);
+    }
+
+    .final-quote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(22px, 5vw, 34px);
+      font-style: italic;
+      font-weight: 300;
+      color: rgba(240,234,214,0.6);
+      max-width: 520px;
+      margin: 0 auto 48px;
+      line-height: 1.5;
+    }
+
+    .final-quote em {
+      color: var(--gold-l);
+      font-style: normal;
+    }
+
+    /* ════════════════════════════════
+       FOOTER
+    ════════════════════════════════ */
+    .footer {
+      padding: 32px 24px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      text-align: center;
+      font-size: 11px;
+      color: rgba(240,234,214,0.2);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Shared animation ── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── Cursor glow ── */
+    #cursor-glow {
+      position: fixed;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.10) 0%, rgba(201,168,76,0.03) 40%, transparent 70%);
+      pointer-events: none;
+      z-index: 5;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.4s;
+      opacity: 0;
+    }
+
+    /* ── Feature card 3D tilt ── */
+    .feature-card {
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    /* ── CTA magnetic glow spot ── */
+    .cta { isolation: isolate; }
+    .cta-glow {
+      position: absolute;
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      filter: blur(16px);
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1;
+    }
+    .cta:hover .cta-glow { opacity: 1; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .reveal { opacity: 1; transform: none; }
+      #cursor-glow { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cursor glow -->
+  <div id="cursor-glow" aria-hidden="true"></div>
+
+  <!-- WebGL shader canvas — hidden on mobile, JS decides -->
+  <canvas id="shader-bg" aria-hidden="true"></canvas>
+
+  <!-- CSS fallback background (always rendered, hidden if WebGL active) -->
+  <div class="bg-mesh" id="bg-mesh-fallback" aria-hidden="true"></div>
+  <div class="bg-grain" aria-hidden="true"></div>
+
+  <div class="particles" aria-hidden="true">
+    <span class="p"></span><span class="p"></span><span class="p"></span>
+    <span class="p"></span><span class="p"></span><span class="p"></span>
+    <span class="p"></span><span class="p"></span>
+  </div>
+
+  <div class="page">
+
+    <!-- ══════════ HERO ══════════ -->
+    <section class="hero">
+
+      <div class="avatar-wrap" aria-label="Oskar Marketing">
+        <div class="ring-c" aria-hidden="true"></div>
+        <div class="ring-b" aria-hidden="true"></div>
+        <div class="ring-a" aria-hidden="true"></div>
+        <img class="avatar-img" src="logo.png" alt="Oskar Marketing" width="120" height="120">
+      </div>
+
+      <h1 class="name">Oskar Marketing</h1>
+      <p class="handle">@oskarmarketing</p>
+
+      <div class="ornament" aria-hidden="true">
+        <div class="ornament-line"></div>
+        <div class="ornament-diamond"></div>
+        <div class="ornament-line"></div>
+      </div>
+
+      <p class="bio">
+        Ich zeige dir, wie du mit <strong>Affiliate Marketing</strong>
+        dein erstes Einkommen online aufbaust —
+        ohne Vorwissen, ohne eigenes Produkt.
+      </p>
+
+      <div class="scroll-hint" aria-hidden="true">
+        <span>Mehr entdecken</span>
+        <div class="scroll-hint-arrow"></div>
+      </div>
+
+    </section>
+
+    <!-- ══════════ PRIMARY CTA ══════════ -->
+    <section class="section-cta">
+      <div class="container reveal">
+        <span class="section-label">Mein Kurs</span>
+        <h2 class="section-title">Starte deine Reise zur<br>finanziellen Freiheit</h2>
+        <p class="section-sub">
+          In der Affiliate Academy lernst du Schritt für Schritt,
+          wie du passives Einkommen aufbaust — bewährt von über 1.200 Schülern.
+        </p>
+        <a class="cta" href="https://theaffiliateacademy.de" target="_blank" rel="noopener">
+          <span class="cta-glow" id="cta-glow-1"></span>
+          <span class="cta-title">Zur Affiliate Academy</span>
+          <span class="cta-sub-text">Kostenlos starten &rarr;</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ══════════ STATS ══════════ -->
+    <section class="section-stats">
+      <div class="container reveal">
+        <span class="section-label">In Zahlen</span>
+        <h2 class="section-title">Ergebnisse, die für sich sprechen</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-num">0€</span>
+            <span class="stat-label">Startkapital</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">30</span>
+            <span class="stat-label">Tage System</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">5-stlg</span>
+            <span class="stat-label">Monatsziel</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ FEATURES ══════════ -->
+    <section class="section-features">
+      <div class="container">
+        <div style="text-align:center" class="reveal">
+          <span class="section-label">Was dich erwartet</span>
+          <h2 class="section-title">Alles, was du brauchst</h2>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card reveal">
+            <span class="feature-icon">&#9670;</span>
+            <div class="feature-title">Ohne Vorwissen starten</div>
+            <p class="feature-text">
+              Du brauchst keine Erfahrung im Marketing oder im Online-Business.
+              Der Kurs erklärt alles von Grund auf — verständlich und umsetzbar.
+            </p>
+          </div>
+          <div class="feature-card reveal" style="transition-delay:0.1s">
+            <span class="feature-icon">&#9670;</span>
+            <div class="feature-title">Bewährtes System</div>
+            <p class="feature-text">
+              Kein Rätselraten. Du bekommst ein klares, erprobtes 30-Tage-System —
+              das bereits über 1.200 Schüler erfolgreich genutzt haben.
+            </p>
+          </div>
+          <div class="feature-card reveal" style="transition-delay:0.2s">
+            <span class="feature-icon">&#9670;</span>
+            <div class="feature-title">5-stelliges Monatsziel</div>
+            <p class="feature-text">
+              Baue Einkommensquellen auf, die für dich arbeiten —
+              skalierbar, flexibel und ortsunabhängig.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SOCIAL LINKS ══════════ -->
+    <section class="section-social">
+      <div class="container reveal">
+        <span class="section-label">Folge mir</span>
+        <h2 class="section-title">Tägliche Tipps &amp; Insights</h2>
+        <nav class="socials" aria-label="Social Media Links">
+
+          <a class="soc" href="https://www.tiktok.com/@oskarmarketing" target="_blank" rel="noopener">
+            <div class="soc-icon" style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.08)">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.95a8.25 8.25 0 0 0 4.83 1.54V7.04a4.85 4.85 0 0 1-1.06-.35z" fill="white"/>
+              </svg>
+            </div>
+            <div class="soc-info">
+              <span class="soc-name">TikTok</span>
+              <span class="soc-desc">Affiliate-Tipps täglich &bull; @oskarmarketing</span>
+            </div>
+            <span class="soc-arrow" aria-hidden="true">›</span>
+          </a>
+
+          <a class="soc" href="https://www.instagram.com/oskarmarketing" target="_blank" rel="noopener">
+            <div class="soc-icon" style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5.5" stroke="white" stroke-width="1.8"/>
+                <circle cx="12" cy="12" r="4.3" stroke="white" stroke-width="1.8"/>
+                <circle cx="17.5" cy="6.5" r="1.1" fill="white"/>
+              </svg>
+            </div>
+            <div class="soc-info">
+              <span class="soc-name">Instagram</span>
+              <span class="soc-desc">Behind the Scenes &bull; @oskarmarketing</span>
+            </div>
+            <span class="soc-arrow" aria-hidden="true">›</span>
+          </a>
+
+          <a class="soc" href="https://www.youtube.com/@oskarmarketing" target="_blank" rel="noopener">
+            <div class="soc-icon" style="background:#ff0000">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58z" fill="white"/>
+                <polygon points="9.75,15.02 15.5,12 9.75,8.98 9.75,15.02" fill="#ff0000"/>
+              </svg>
+            </div>
+            <div class="soc-info">
+              <span class="soc-name">YouTube</span>
+              <span class="soc-desc">Kostenlose Tutorials &bull; @oskarmarketing</span>
+            </div>
+            <span class="soc-arrow" aria-hidden="true">›</span>
+          </a>
+
+          <a class="soc" href="https://threads.net/@oskarmarketing" target="_blank" rel="noopener">
+            <div class="soc-icon" style="background:#000;border:1px solid rgba(255,255,255,0.12)">
+              <svg viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M141.537 88.988a66.667 66.667 0 0 0-2.518-1.143c-1.482-27.307-16.403-42.94-41.457-43.1h-.34c-14.986 0-27.449 6.396-35.12 18.036l13.779 9.452c5.73-8.695 14.724-10.548 21.348-10.548h.229c8.249.053 14.474 2.452 18.503 7.129 2.932 3.405 4.893 8.111 5.864 14.05-7.314-1.243-15.224-1.626-23.68-1.14-23.82 1.371-39.134 15.264-38.105 34.568.522 9.792 5.4 18.216 13.735 23.719 7.047 4.652 16.124 6.927 25.557 6.412 12.458-.683 22.231-5.436 29.049-14.127 5.178-6.6 8.453-15.153 9.899-25.93 5.937 3.583 10.337 8.298 12.767 13.966 4.132 9.635 4.373 25.468-8.546 38.376-11.319 11.308-24.925 16.2-45.488 16.351-22.809-.169-40.06-7.484-51.275-21.741C35.236 139.966 29.808 120.682 29.605 96c.203-24.682 5.63-43.966 16.133-57.317C56.954 24.425 74.204 17.11 97.013 16.94c22.975.17 40.526 7.52 52.171 21.847 5.71 7.026 9.98 15.86 12.737 26.311l16.192-4.325c-3.388-12.838-8.815-23.826-16.244-32.821C147.036 9.465 125.202.195 97.07 0h-.113C68.882.195 47.292 9.51 32.777 27.836 19.884 44.15 13.223 67.098 13.01 95.999v.04c.213 28.9 6.875 51.848 19.768 68.162C47.292 182.49 68.882 191.805 96.957 192h.113c24.96-.173 42.554-6.708 57.048-21.189 18.963-18.945 18.392-42.692 12.142-57.27-4.484-10.454-13.033-18.945-24.723-24.553zM98.44 129.507c-10.44.588-21.286-4.098-21.82-14.135-.397-7.442 5.296-15.746 22.461-16.735 1.966-.113 3.895-.169 5.79-.169 6.235 0 12.068.606 17.371 1.765-1.978 24.702-13.58 28.713-23.802 29.274z" fill="white"/>
+              </svg>
+            </div>
+            <div class="soc-info">
+              <span class="soc-name">Threads</span>
+              <span class="soc-desc">Gedanken &amp; Updates &bull; @oskarmarketing</span>
+            </div>
+            <span class="soc-arrow" aria-hidden="true">›</span>
+          </a>
+
+        </nav>
+      </div>
+    </section>
+
+    <!-- ══════════ FINAL CTA ══════════ -->
+    <section class="section-final">
+      <div class="container reveal">
+        <p class="final-quote">
+          „Der beste Zeitpunkt anzufangen war gestern.<br>
+          Der <em>zweitbeste Zeitpunkt</em> ist jetzt."
+        </p>
+        <a class="cta" href="https://theaffiliateacademy.de" target="_blank" rel="noopener">
+          <span class="cta-glow" id="cta-glow-2"></span>
+          <span class="cta-title">Jetzt kostenlos starten</span>
+          <span class="cta-sub-text">Affiliate Academy &rarr;</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ══════════ FOOTER ══════════ -->
+    <footer class="footer">
+      &copy; 2026 Oskar Marketing &mdash; @oskarmarketing
+    </footer>
+
+  </div>
+
+  <script>
+    /* ── Scroll reveal ── */
+    var els = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12 });
+      els.forEach(function(el) { io.observe(el); });
+    } else {
+      els.forEach(function(el) { el.classList.add('visible'); });
+    }
+
+    /* ── Cursor glow ── */
+    var cursorGlow = document.getElementById('cursor-glow');
+    var cgX = 0, cgY = 0, cgTX = 0, cgTY = 0;
+    var cgVisible = false;
+    document.addEventListener('mousemove', function(e) {
+      cgTX = e.clientX; cgTY = e.clientY;
+      if (!cgVisible) { cursorGlow.style.opacity = '1'; cgVisible = true; }
+    });
+    document.addEventListener('mouseleave', function() {
+      cursorGlow.style.opacity = '0'; cgVisible = false;
+    });
+    (function cgLoop() {
+      cgX += (cgTX - cgX) * 0.08;
+      cgY += (cgTY - cgY) * 0.08;
+      cursorGlow.style.left = cgX + 'px';
+      cursorGlow.style.top  = cgY + 'px';
+      requestAnimationFrame(cgLoop);
+    })();
+
+    /* ── Hero parallax (subtle content shift on mouse) ── */
+    var heroContent = document.querySelector('.hero');
+    var heroInner   = heroContent ? heroContent.querySelectorAll('.avatar-wrap, .name, .handle, .ornament, .bio') : [];
+    document.addEventListener('mousemove', function(e) {
+      if (!heroContent) return;
+      var rect = heroContent.getBoundingClientRect();
+      if (e.clientY < rect.bottom) {
+        var dx = (e.clientX / window.innerWidth  - 0.5) * 14;
+        var dy = (e.clientY / window.innerHeight - 0.5) * 8;
+        heroInner.forEach(function(el, i) {
+          var factor = 1 - i * 0.12;
+          el.style.transform = 'translate(' + (dx * factor) + 'px,' + (dy * factor) + 'px)';
+          el.style.transition = 'transform 0.6s cubic-bezier(0.22,1,0.36,1)';
+        });
+      }
+    });
+
+    /* ── CTA magnetic glow follows mouse within button ── */
+    document.querySelectorAll('.cta').forEach(function(btn) {
+      var glow = btn.querySelector('.cta-glow');
+      if (!glow) return;
+      btn.addEventListener('mousemove', function(e) {
+        var r = btn.getBoundingClientRect();
+        glow.style.left = (e.clientX - r.left) + 'px';
+        glow.style.top  = (e.clientY - r.top)  + 'px';
+      });
+    });
+
+    /* ── Feature card 3D tilt on hover ── */
+    document.querySelectorAll('.feature-card').forEach(function(card) {
+      card.addEventListener('mousemove', function(e) {
+        var r   = card.getBoundingClientRect();
+        var cx  = r.left + r.width  / 2;
+        var cy  = r.top  + r.height / 2;
+        var rx  = ((e.clientY - cy) / (r.height / 2)) * -6;
+        var ry  = ((e.clientX - cx) / (r.width  / 2)) *  6;
+        card.style.transform = 'perspective(600px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-4px)';
+        card.style.transition = 'transform 0.1s ease';
+      });
+      card.addEventListener('mouseleave', function() {
+        card.style.transform = '';
+        card.style.transition = 'transform 0.5s cubic-bezier(0.22,1,0.36,1), border-color 0.25s';
+      });
+    });
+
+    /* ── WebGL Shader Background ──
+       Adapted from 21st.dev shader, colors: #050505 + #C9A84C
+       Mobile: auto-fallback to CSS mesh gradient
+    ── */
+    (function () {
+      var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+      var canvas = document.getElementById('shader-bg');
+      var fallback = document.getElementById('bg-mesh-fallback');
+
+      if (isMobile) {
+        canvas.style.display = 'none';
+        return;
+      }
+
+      var gl;
+      try { gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl'); } catch(e) {}
+
+      if (!gl) {
+        canvas.style.display = 'none';
+        return;
+      }
+
+      /* WebGL active — hide CSS fallback */
+      fallback.style.display = 'none';
+
+      /* ── Shaders (adapted from 21st.dev) ── */
+      var VS = [
+        'attribute vec2 a_pos;',
+        'varying vec2 vUv;',
+        'void main(){',
+        '  vUv = a_pos * 0.5 + 0.5;',
+        '  gl_Position = vec4(a_pos, 0.0, 1.0);',
+        '}'
+      ].join('\n');
+
+      var FS = [
+        'precision mediump float;',
+        'uniform float time;',
+        'uniform vec2  mouse;',
+        'uniform vec3  color1;',
+        'uniform vec3  color2;',
+        'varying vec2  vUv;',
+        'void main(){',
+        '  vec2 uv = vUv;',
+        /* Visible speed (0.22) + mouse offset shifts blob centers */
+        '  float t  = time * 0.22;',
+        '  vec2  mx = mouse * 0.35;',
+        '  float n  = sin(uv.x * 1.8 + t * 0.9  + mx.x) * cos(uv.y * 1.4 + t * 0.6  + mx.y);',
+        '  n += sin(uv.x * 1.1 - t * 0.5  + mx.x * 0.7 + 2.1) * cos(uv.y * 2.0 + t * 0.7  - mx.y * 0.5) * 0.85;',
+        '  n += sin(uv.x * 2.5 + uv.y * 1.9 + t * 0.35 + mx.x * 0.4) * 0.45;',
+        '  n /= 2.3;',
+        '  n  = n * 0.5 + 0.5;',
+        '  n  = pow(n, 1.7);',
+        '  vec3 col = mix(color1, color2, n * 0.62);',
+        '  float dist = length(uv - 0.5);',
+        '  float vig  = 1.0 - smoothstep(0.18, 0.88, dist);',
+        '  col = mix(color1 * 0.15, col, vig);',
+        '  gl_FragColor = vec4(col, 1.0);',
+        '}'
+      ].join('\n');
+
+      function compileShader(type, src) {
+        var sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) { gl.deleteShader(sh); return null; }
+        return sh;
+      }
+
+      var vert = compileShader(gl.VERTEX_SHADER, VS);
+      var frag = compileShader(gl.FRAGMENT_SHADER, FS);
+      if (!vert || !frag) { canvas.style.display = 'none'; fallback.style.display = ''; return; }
+
+      var prog = gl.createProgram();
+      gl.attachShader(prog, vert);
+      gl.attachShader(prog, frag);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { canvas.style.display = 'none'; fallback.style.display = ''; return; }
+      gl.useProgram(prog);
+
+      /* Fullscreen quad */
+      var buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+      var loc = gl.getAttribLocation(prog, 'a_pos');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+      /* Uniforms */
+      var uTime   = gl.getUniformLocation(prog, 'time');
+      var uMouse  = gl.getUniformLocation(prog, 'mouse');
+      var uColor1 = gl.getUniformLocation(prog, 'color1');
+      var uColor2 = gl.getUniformLocation(prog, 'color2');
+
+      gl.uniform3f(uColor1, 5/255,   5/255,   5/255);
+      gl.uniform3f(uColor2, 201/255, 168/255, 76/255);
+      gl.uniform2f(uMouse, 0.5, 0.5);
+
+      /* Smooth mouse target (lerped in render loop) */
+      var mx = 0.5, my = 0.5, txm = 0.5, tym = 0.5;
+      window.addEventListener('mousemove', function(e) {
+        txm = e.clientX / window.innerWidth;
+        tym = 1.0 - (e.clientY / window.innerHeight);
+      });
+
+      /* Resize */
+      function resize() {
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width  = window.innerWidth  * dpr;
+        canvas.height = window.innerHeight * dpr;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      /* Render loop */
+      var elapsed = 0;
+      var lastTs  = performance.now();
+      var raf;
+      function render(ts) {
+        var dt = Math.min((ts - lastTs) * 0.001, 0.05); /* cap at 50ms */
+        lastTs  = ts;
+        elapsed += dt;
+        /* Lerp mouse for smooth shader influence */
+        mx += (txm - mx) * 0.04;
+        my += (tym - my) * 0.04;
+        gl.uniform1f(uTime, elapsed);
+        gl.uniform2f(uMouse, mx, my);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        raf = requestAnimationFrame(render);
+      }
+
+      /* Pause when tab hidden — saves battery, no time-jump on resume */
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+          cancelAnimationFrame(raf);
+        } else {
+          lastTs = performance.now();
+          raf = requestAnimationFrame(render);
+        }
+      });
+
+      raf = requestAnimationFrame(render);
+    })();
+  </script>
+
+</body>
+</html>
